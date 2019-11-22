@@ -7,8 +7,6 @@ set -Eeuo pipefail
 
 ENV_DIR="${3:-/tmp/env}"
 
-ls -l "${ENV_DIR}"
-
 if [[ -z "${CUSTOM_SSH_KEY:-}" && -z "${CUSTOM_SSH_KEY_HOSTS:-}" && -f "${ENV_DIR}/CUSTOM_SSH_KEY" && -f "${ENV_DIR}/CUSTOM_SSH_KEY_HOSTS" ]]; then
     CUSTOM_SSH_KEY="`cat ${ENV_DIR}/CUSTOM_SSH_KEY`"
     CUSTOM_SSH_KEY_HOSTS="`cat ${ENV_DIR}/CUSTOM_SSH_KEY_HOSTS`"
