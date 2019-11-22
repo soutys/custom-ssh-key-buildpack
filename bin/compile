@@ -3,36 +3,46 @@
 
 # Generates an SSH config file for connections if a config var exists.
 
-ENV_DIR=$3
+set -Eeuo pipefail
 
-if [[ -f $ENV_DIR/CUSTOM_SSH_KEY && -f $ENV_DIR/CUSTOM_SSH_KEY_HOSTS ]]; then
+ENV_DIR="${3:-/tmp/env}"
 
-  echo "" >&1
+if [[ -z "${CUSTOM_SSH_KEY:-}" && -z "${CUSTOM_SSH_KEY_HOSTS:-}" && -f "${ENV_DIR}/CUSTOM_SSH_KEY" && -f "${ENV_DIR}/CUSTOM_SSH_KEY_HOSTS" ]]; then
+    CUSTOM_SSH_KEY="`cat ${ENV_DIR}/CUSTOM_SSH_KEY`"
+    CUSTOM_SSH_KEY_HOSTS="`cat ${ENV_DIR}/CUSTOM_SSH_KEY_HOSTS`"
+fi
 
-  # Ensure we have an ssh folder
+echo "" >&1
+
+if [[ -n "${CUSTOM_SSH_KEY:-}" && -n "${CUSTOM_SSH_KEY_HOSTS:-}" ]]; then
+
+  # Ensure we have an ~/.ssh folder
   if [ ! -d ~/.ssh ]; then
-    mkdir -p ~/.ssh
-    chmod 700 ~/.ssh
+    mkdir --mode u=rwx,go= --parents ~/.ssh
   fi
 
   # Load the private key into custom_key file.
-  base64 --decode $ENV_DIR/CUSTOM_SSH_KEY > ~/.ssh/custom_key
+  echo "${CUSTOM_SSH_KEY}" | base64 --decode > ~/.ssh/custom_key
 
   # Change the permissions on the file to
   # be read-only for this user.
-  chmod 400 ~/.ssh/custom_key
+  chmod u=rw,go= ~/.ssh/custom_key
 
   # Split $CUSTOM_SSH_KEY_HOSTS
-  IFS=',' ;for element in `cat $ENV_DIR/CUSTOM_SSH_KEY_HOSTS`;
+  IFS=',' ;for element in ${CUSTOM_SSH_KEY_HOSTS};
   do
-    echo -e "Host $element\n"\
+    echo -e "Host ${element}\n"\
             "  IdentityFile ~/.ssh/custom_key\n"\
             "  IdentitiesOnly yes\n"\
-            "  UserKnownHostsFile=/dev/null\n"\
+            "  UserKnownHostsFile /dev/null\n"\
             "  StrictHostKeyChecking no"\
             >> ~/.ssh/config
   done
 
   echo "-----> Successfully added custom SSH key"
+
+else
+
+  echo "-----> No custom SSH key found!"
 
 fi
