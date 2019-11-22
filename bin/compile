@@ -5,6 +5,8 @@
 
 set -Eeuo pipefail
 
+env
+
 ENV_DIR="${3:-/tmp/env}"
 
 if [[ -z "${CUSTOM_SSH_KEY:-}" && -z "${CUSTOM_SSH_KEY_HOSTS:-}" && -f "${ENV_DIR}/CUSTOM_SSH_KEY" && -f "${ENV_DIR}/CUSTOM_SSH_KEY_HOSTS" ]]; then
